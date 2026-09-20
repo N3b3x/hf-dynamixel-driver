@@ -1,0 +1,7 @@
+[submodule "external/DynamixelSDK"]
+	path = external/DynamixelSDK
+	url = https://github.com/ROBOTIS-GIT/DynamixelSDK.git
+[submodule "examples/esp32/scripts"]
+	path = examples/esp32/scripts
+	url = https://github.com/N3b3x/hf-espidf-project-tools.git
+	branch = main

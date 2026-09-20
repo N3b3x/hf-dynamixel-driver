@@ -1,0 +1,62 @@
+/**
+ * @file dynamixel_device.hpp
+ * @brief One servo on a shared `Bus`, with optional model descriptor.
+ *
+ * @copyright Copyright (c) 2026 HardFOC. All rights reserved.
+ */
+#pragma once
+
+#include "dynamixel_bus.hpp"
+#include "dynamixel_model.hpp"
+
+#include <cstdint>
+
+namespace dynamixel {
+
+class Device {
+public:
+    Device(Bus& bus, uint8_t id) noexcept;
+
+    uint8_t id() const noexcept { return id_; }
+    const ModelDescriptor* model() const noexcept { return model_; }
+    bool identified() const noexcept { return model_ != nullptr; }
+
+    DriverResult<PingInfo> Identify() noexcept;
+
+    /// Bind a hand-authored table. Survives `Identify()` when the ping
+    /// model is unknown and `desc.model_number` is 0 or matches the ping.
+    void BindModel(const ModelDescriptor& desc) noexcept;
+    void BindXSeriesFallback() noexcept;
+
+    DriverResult<void> SetTorqueEnabled(bool enabled) noexcept;
+    DriverResult<void> SetOperatingMode(OperatingMode mode) noexcept;
+    DriverResult<void> SetMotionProfile(uint32_t profile_acceleration,
+                                        uint32_t profile_velocity) noexcept;
+    DriverResult<void> SetGoalPosition(int32_t ticks) noexcept;
+    DriverResult<void> SetGoalVelocity(int32_t ticks_per_sec) noexcept;
+    DriverResult<void> SetGoalPwm(int16_t pwm) noexcept;
+
+    DriverResult<int32_t> ReadPosition() noexcept;
+    DriverResult<Telemetry> ReadTelemetry() noexcept;
+
+    DriverResult<uint16_t> ReadRegister(uint16_t address, uint8_t* data,
+                                        uint16_t length) noexcept;
+    DriverResult<void> WriteRegister(uint16_t address, const uint8_t* data,
+                                     uint16_t length,
+                                     WritePolicy policy = WritePolicy::TxRx) noexcept;
+
+private:
+    DriverResult<void> RequireModel() const noexcept;
+    DriverResult<void> RequireMode(OperatingMode mode) const noexcept;
+    DriverResult<int32_t> ReadSigned(const RegisterDesc& reg) noexcept;
+    DriverResult<void> WriteSigned(const RegisterDesc& reg, int32_t value,
+                                   WritePolicy policy) noexcept;
+
+    Bus& bus_;
+    uint8_t id_;
+    const ModelDescriptor* model_{nullptr};
+    OperatingMode cached_mode_{OperatingMode::Position};
+    bool mode_known_{false};
+};
+
+}  // namespace dynamixel
